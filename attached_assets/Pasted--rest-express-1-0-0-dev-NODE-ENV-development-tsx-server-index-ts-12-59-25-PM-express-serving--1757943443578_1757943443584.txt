@@ -1,0 +1,141 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+12:59:25 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+1:00:11 PM [express] POST /api/auth/login-pin 200 in 679ms :: {"user":{"id":"d831df46-b060-4d78-945c…
+1:00:11 PM [express] GET /api/messages/d831df46-b060-4d78-945c-2e222988e458 304 in 1ms :: []
+1:00:11 PM [express] GET /api/reminders/d831df46-b060-4d78-945c-2e222988e458/today 304 in 164ms :: []
+1:05:42 PM [express] GET /api/reminders/d831df46-b060-4d78-945c-2e222988e458/upcoming 304 in 769ms :…
+1:13:25 PM [express] POST /api/auth/login-pin 200 in 1055ms :: {"user":{"id":"d831df46-b060-4d78-945…
+1:13:26 PM [express] GET /api/reminders/d831df46-b060-4d78-945c-2e222988e458/today 304 in 155ms :: []
+1:13:26 PM [express] GET /api/messages/d831df46-b060-4d78-945c-2e222988e458 304 in 0ms :: []
+1:14:00 PM [express] POST /api/auth/login 200 in 384ms :: {"user":{"id":"d3b7c017-7b02-4b54-924f-ea4…
+1:14:05 PM [express] GET /api/activities/elderly-001 200 in 1ms :: []
+1:14:05 PM [express] GET /api/users/elderly-001 404 in 73ms :: {"message":"Usuario no encontrado"}
+1:14:05 PM [express] GET /api/reminders/elderly-001/today 200 in 144ms :: []
+1:14:06 PM [express] GET /api/reminders/elderly-001 200 in 292ms :: []
+1:14:06 PM [express] GET /api/reminders/elderly-001/stats 200 in 147ms :: {"total":0,"completed":0,"…
+1:14:06 PM [express] GET /api/reminders/elderly-001/completions 200 in 300ms :: []
+1:15:06 PM [express] POST /api/auth/login 200 in 484ms :: {"user":{"id":"d3b7c017-7b02-4b54-924f-ea4…
+1:15:22 PM [express] GET /api/users/elderly-001 404 in 295ms :: {"message":"Usuario no encontrado"}
+1:15:29 PM [express] GET /api/messages/elderly-001 200 in 0ms :: []
+1:15:29 PM [express] GET /api/users/elderly-001 404 in 73ms :: {"message":"Usuario no encontrado"}
+1:16:10 PM [express] POST /api/messages 200 in 1ms :: {"id":"cfe2e516-9c9f-4b80-b5b2-6c3e7023333b","…
+1:16:11 PM [express] GET /api/messages/elderly-001 200 in 1ms :: [{"id":"cfe2e516-9c9f-4b80-b5b2-6c3…
+1:16:59 PM [express] GET /api/reminders/d831df46-b060-4d78-945c-2e222988e458/upcoming 304 in 2773ms …
+1:17:12 PM [express] GET /api/reminders/d831df46-b060-4d78-945c-2e222988e458/upcoming 304 in 2373ms …
+1:17:22 PM [express] POST /api/auth/login 200 in 387ms :: {"user":{"id":"d3b7c017-7b02-4b54-924f-ea4…
+1:17:24 PM [express] GET /api/reminders/elderly-001 304 in 74ms :: []
+1:17:55 PM [express] POST /api/reminders 500 in 329ms :: {"message":"Error del servidor"}
+1:21:32 PM [express] GET /api/activities/elderly-001 304 in 0ms :: []
+1:21:33 PM [express] GET /api/reminders/elderly-001/today 304 in 778ms :: []
+1:21:33 PM [express] GET /api/reminders/elderly-001/completions 304 in 1377ms :: []
+1:21:33 PM [express] GET /api/users/elderly-001 404 in 1393ms :: {"message":"Usuario no encontrado"}
+1:21:33 PM [express] GET /api/reminders/elderly-001/stats 304 in 1448ms :: {"total":0,"completed":0,…
+1:21:35 PM [express] GET /api/messages/elderly-001 200 in 1ms :: [{"id":"cfe2e516-9c9f-4b80-b5b2-6c3…
+1:22:56 PM [express] POST /api/auth/login 401 in 306ms :: {"message":"Credenciales inválidas"}
+1:23:02 PM [express] POST /api/auth/login 200 in 157ms :: {"user":{"id":"prof-001-uuid-test-12345678…
+1:23:02 PM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 200 in 95ms :: [{…
+1:23:03 PM [express] GET /api/activities/all 304 in 0ms :: []
+1:25:28 PM [express] GET /api/reminders/elderly-001 304 in 2669ms :: []
+1:27:22 PM [express] GET /api/users/d831df46-b060-4d78-945c-2e222988e458 200 in 681ms :: {"id":"d831…
+1:27:40 PM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 326ms :: […
+1:27:41 PM [express] GET /api/activities/all 304 in 1ms :: []
+1:27:48 PM [express] GET /api/reminders/d831df46-b060-4d78-945c-2e222988e458 304 in 76ms :: [{"id":"…
+1:28:41 PM [express] DELETE /api/reminders/2c0c65a9-4db9-4d5d-9c0f-e26e5d5e9ccc 500 in 318ms :: {"me…
+1:30:49 PM [express] POST /api/professional/create-elderly-user 200 in 2830ms :: {"id":"58112cfd-1ad…
+1:30:52 PM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 200 in 99ms :: [{…
+1:30:52 PM [express] GET /api/activities/all 304 in 0ms :: []
+1:31:09 PM [express] GET /api/users/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 2305ms :: {"id":"581…
+1:31:09 PM [express] GET /api/activities/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 1ms :: []
+1:31:09 PM [express] GET /api/reminders/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 82ms :: []
+1:31:16 PM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 82ms :: [{…
+1:31:16 PM [express] GET /api/activities/all 304 in 1ms :: []
+1:31:18 PM [express] GET /api/metrics/engagement/aggregated 304 in 320ms :: {"totalSessions":0,"aver…
+1:31:18 PM [express] GET /api/metrics/ai-quality/aggregated 304 in 315ms :: {"totalAISessions":0,"av…
+1:31:18 PM [express] GET /api/metrics/health/aggregated 304 in 450ms :: {"medicationAdherence":0,"ap…
+1:31:20 PM [express] GET /api/metrics/ai-quality/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 80ms ::…
+1:31:20 PM [express] GET /api/metrics/health/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 156ms :: {"…
+1:31:20 PM [express] GET /api/metrics/engagement/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 293ms :…
+1:31:25 PM [express] GET /api/metrics/ai-quality/d831df46-b060-4d78-945c-2e222988e458 200 in 74ms ::…
+1:31:25 PM [express] GET /api/metrics/health/d831df46-b060-4d78-945c-2e222988e458 200 in 154ms :: {"…
+1:31:25 PM [express] GET /api/metrics/engagement/d831df46-b060-4d78-945c-2e222988e458 200 in 291ms :…
+1:36:26 PM [vite] hmr update /src/components/navigation.tsx, /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:26 PM [vite] hmr update /src/pages/elderly-login.tsx, /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:26 PM [vite] hmr update /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:27 PM [vite] hmr update /src/pages/elderly-chat.tsx, /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:27 PM [vite] hmr update /src/pages/elderly-memory-exercises.tsx, /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:28 PM [vite] hmr update /src/App.tsx?v=dqvUpwnr1CuqLQ8MyHsZz, /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:28 PM [vite] hmr invalidate /src/components/navigation.tsx Could not Fast Refresh (export removed)
+1:36:28 PM [vite] hmr update /src/App.tsx?v=dqvUpwnr1CuqLQ8MyHsZz, /src/index.css?v=dqvUpwnr1CuqLQ8MyHsZz
+1:36:29 PM [vite] Internal server error: /home/runner/workspace/client/src/App.tsx: Unterminated template. (174:3)
+
+  172 |
+  173 | export default App;
+> 174 | ```<Route path="/family-login" component={FamilyLogin} />
+      |    ^
+  175 |             <Route path="/family">
+  176 |               {() => {
+  177 |                 const FamilyDashboard = lazy(() => import("@/pages/family-dashboard"));
+  Plugin: vite:react-babel
+  File: /home/runner/workspace/client/src/App.tsx:174:3
+  172|  
+  173|  export default App;
+  174|  ```<Route path="/family-login" component={FamilyLogin} />
+     |     ^
+  175|              <Route path="/family">
+  176|                {() => {
+      at toParseError (/home/runner/workspace/node_modules/@babel/parser/src/parse-error.ts:95:45)
+      at raise (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:1497:19)
+      at unterminated (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:1618:18)
+      at readStringContents (/home/runner/workspace/node_modules/@babel/babel-helper-string-parser/src/index.ts:69:14)
+      at readTemplateToken (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:1358:7)
+      at getTokenFromCode (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:947:14)
+      at getTokenFromCode (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:631:13)
+      at getTokenFromCode (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3975:13)
+      at nextToken (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:274:10)
+      at next (/home/runner/workspace/node_modules/@babel/parser/src/tokenizer/index.ts:121:10)
+      at parseTemplateElement (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:1958:10)
+      at parseTemplate (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:1970:23)
+      at parseExprAtom (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:1186:21)
+      at parseExprAtom (/home/runner/workspace/node_modules/@babel/parser/src/plugins/jsx/index.ts:583:22)
+      at parseExprSubscripts (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:714:23)
+      at parseUpdate (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:693:21)
+      at parseMaybeUnary (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:655:23)
+      at parseMaybeUnary (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3735:20)
+      at parseMaybeUnaryOrPrivate (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:389:14)
+      at parseExprOps (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:401:23)
+      at parseMaybeConditional (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:356:23)
+      at parseMaybeAssign (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:298:21)
+      at parseMaybeAssign (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3607:22)
+      at parseExpressionBase (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:221:23)
+      at callback (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:212:39)
+      at allowInAnd (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:3112:16)
+      at parseExpression (/home/runner/workspace/node_modules/@babel/parser/src/parser/expression.ts:212:17)
+      at parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:659:23)
+      at parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:3056:20)
+      at parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:437:17)
+      at parseModuleItem (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:374:17)
+      at parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1419:16)
+      at parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:1393:10)
+      at parseProgram (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:225:10)
+      at parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/src/parser/statement.ts:203:25)
+      at parse (/home/runner/workspace/node_modules/@babel/parser/src/parser/index.ts:90:10)
+      at parse (/home/runner/workspace/node_modules/@babel/parser/src/plugins/typescript/index.ts:4192:20)
+      at parse (/home/runner/workspace/node_modules/@babel/parser/src/index.ts:92:38)
+      at parser (/home/runner/workspace/node_modules/@babel/core/src/parser/index.ts:28:19)
+      at parser.next (<anonymous>)
+      at normalizeFile (/home/runner/workspace/node_modules/@babel/core/src/transformation/normalize-file.ts:50:24)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/runner/workspace/node_modules/@babel/core/src/transformation/index.ts:40:36)
+      at run.next (<anonymous>)
+      at transform (/home/runner/workspace/node_modules/@babel/core/src/transform.ts:29:20)
+      at transform.next (<anonymous>)
+      at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+      at /home/runner/workspace/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+      at /home/runner/workspace/node_modules/gensync/index.js:189:28

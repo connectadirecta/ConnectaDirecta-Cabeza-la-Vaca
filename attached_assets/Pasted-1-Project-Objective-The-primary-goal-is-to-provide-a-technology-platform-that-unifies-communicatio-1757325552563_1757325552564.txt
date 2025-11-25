@@ -1,0 +1,82 @@
+1. Project Objective
+The primary goal is to provide a technology platform that unifies communication between elderly users, their families, and socio-sanitary professionals. The platform will offer simple tools for cognitive stimulation, emotional support, and personal information management to promote autonomy and active aging.
+
+2. Core User Roles
+The MVP will support three distinct user roles with different permissions and functionalities:
+Persona Mayor (Elderly User): The main user of the platform, interacting through accessible interfaces.
+Familiar (Family Member/Caregiver): A remote user who supports and coordinates care for the elderly user.
+Personal Municipal (Municipal/Professional Staff): A supervisor who oversees multiple users to monitor for inactivity and coordinate local activities.
+
+3. Key MVP Features
+
+Secure, Role-Based Authentication: Each user role will have a distinct and secure login method.
+
+
+AI Virtual Assistant: An interactive chat module for conversation and cognitive exercises, using the DeepSeek API with a simple RAG system.
+
+
+
+
+Reminder System: A shared calendar for medical appointments, medication schedules, and other important events.
+
+
+Dashboards: Tailored views for family members and professionals to monitor user activity and coordinate care.
+
+
+4. User Flows & Screen Functional Logic
+
+This section details the logic for the ~12 core screens of the MVP.
+
+Flow 1: Persona Mayor (Elderly User)
+
+
+Screen 1: Simplified Login: A screen with a large numeric keypad for PIN-based authentication.
+
+Screen 2: Main Menu: A simple dashboard with 3-4 large, icon-driven buttons to access the main sections (AI Assistant, Reminders, Family Messages).
+
+Screen 3: AI Assistant (Chat): A full-screen, high-contrast chat interface for conversing with the AI. It will be used for companionship and to perform memory exercises.
+
+
+
+Screen 4: Reminders View: A clear, read-only list of today's reminders (e.g., medical appointments, medication times).
+
+Flow 2: Familiar (Family Member/Caregiver)
+
+Screen 5: Standard Login: A standard email and password login form.
+
+
+Screen 6: Family Dashboard: An overview screen showing the elderly user's recent activity, status, and any alerts (e.g., inactivity).
+
+
+Screen 7: Manage Reminders: A full CRUD (Create, Read, Update, Delete) interface to manage the elderly user's appointments and medication schedules.
+
+
+Screen 8: Activity History: A view to review the user's interaction history on the platform.
+
+
+Screen 9: Send Message/Photo: A simple form to send short messages or share photos with the elderly user.
+
+Flow 3: Personal Municipal (Professional Staff)
+
+Screen 10: Professional Login: A standard email and password login for professional accounts.
+
+Screen 11: Supervision Dashboard: A list view of all assigned elderly users. Each entry will show the user's name, last activity date, and an alert icon for prolonged inactivity.
+
+
+Screen 12: User Detail View (Read-Only): A read-only version of the Family Dashboard, allowing the professional to review a specific user's authorized information and activity to detect needs.
+
+5. Technical Stack & Key Requirements
+
+Frontend: React (Next.js) + MUI (Material-UI) Component Library.
+
+Backend: Node.js (Fastify/Express).
+
+Database: PostgreSQL.
+
+
+Deployment: The entire application must be containerized with Docker.
+
+AI Integration: Must use the DeepSeek API and include a simple RAG implementation. The RAG data source will be a small, Something like Excel with information about each user that the healthcare provider enters into the database.
+
+Security: All communications must be encrypted, and data-at-rest must be protected. The system must adhere to role-based access control.
+

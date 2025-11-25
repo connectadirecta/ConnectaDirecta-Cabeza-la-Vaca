@@ -1,0 +1,451 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(222.2, 84%, 4.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222.2, 84%, 4.9%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222.2, 84%, 4.9%);
+  --primary: hsl(239, 84%, 67%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(239, 84%, 95%);
+  --secondary-foreground: hsl(239, 84%, 20%);
+  --muted: hsl(210, 40%, 96%);
+  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+  --accent: hsl(210, 40%, 94%);
+  --accent-foreground: hsl(222.2, 84%, 4.9%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(214.3, 31.8%, 91.4%);
+  --input: hsl(214.3, 31.8%, 91.4%);
+  --ring: hsl(239, 84%, 67%);
+  --chart-1: hsl(239, 84%, 67%);
+  --chart-2: hsl(159.7826, 100%, 36.0784%);
+  --chart-3: hsl(42.029, 92.8251%, 56.2745%);
+  --chart-4: hsl(147.1429, 78.5047%, 41.9608%);
+  --chart-5: hsl(341.4894, 75.2%, 50.9804%);
+  --sidebar: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(222.2, 84%, 4.9%);
+  --sidebar-primary: hsl(239, 84%, 67%);
+  --sidebar-primary-foreground: hsl(0, 0%, 98%);
+  --sidebar-accent: hsl(210, 40%, 94%);
+  --sidebar-accent-foreground: hsl(222.2, 84%, 4.9%);
+  --sidebar-border: hsl(214.3, 31.8%, 91.4%);
+  --sidebar-ring: hsl(239, 84%, 67%);
+  --font-sans: 'Inter', 'Open Sans', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222.2, 84%, 4.9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(239, 84%, 67%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217.2, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  --accent: hsl(217.2, 32.6%, 17.5%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217.2, 32.6%, 17.5%);
+  --input: hsl(217.2, 32.6%, 17.5%);
+  --ring: hsl(239, 84%, 67%);
+  --chart-1: hsl(220, 70%, 50%);
+  --chart-2: hsl(160, 60%, 45%);
+  --chart-3: hsl(30, 80%, 55%);
+  --chart-4: hsl(280, 65%, 60%);
+  --chart-5: hsl(340, 75%, 55%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Font size variants based on user preference */
+:root[data-font-size="small"] {
+  --base-font-size: 0.875rem;
+  --elderly-font-size: 1rem;
+  --elderly-large-font-size: 1.25rem;
+  --elderly-button-height: 3rem;
+  --elderly-large-button-height: 6rem;
+}
+
+:root[data-font-size="medium"] {
+  --base-font-size: 1rem;
+  --elderly-font-size: 1.25rem;
+  --elderly-large-font-size: 1.5rem;
+  --elderly-button-height: 4rem;
+  --elderly-large-button-height: 8rem;
+}
+
+:root[data-font-size="large"] {
+  --base-font-size: 1.125rem;
+  --elderly-font-size: 1.5rem;
+  --elderly-large-font-size: 1.875rem;
+  --elderly-button-height: 5rem;
+  --elderly-large-button-height: 10rem;
+}
+
+:root[data-font-size="extra-large"] {
+  --base-font-size: 1.25rem;
+  --elderly-font-size: 1.875rem;
+  --elderly-large-font-size: 2.25rem;
+  --elderly-button-height: 6rem;
+  --elderly-large-button-height: 12rem;
+}
+
+/* Elderly-specific styles for better accessibility */
+.elderly-text {
+  font-size: var(--elderly-font-size);
+  @apply font-semibold leading-relaxed;
+}
+
+.elderly-button {
+  min-height: var(--elderly-button-height);
+  font-size: var(--elderly-font-size);
+  @apply font-semibold px-6 py-3 rounded-2xl transition-colors whitespace-normal text-center;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.elderly-large-button {
+  min-height: var(--elderly-large-button-height);
+  font-size: var(--elderly-large-font-size);
+  @apply font-bold px-6 py-4 rounded-2xl transition-colors whitespace-normal text-center;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Responsive text sizing - always respects user font size preference */
+.responsive-text {
+  font-size: var(--base-font-size);
+  line-height: 1.5;
+}
+
+.responsive-text-sm {
+  font-size: calc(var(--base-font-size) * 0.875);
+  line-height: 1.5;
+}
+
+.responsive-text-lg {
+  font-size: calc(var(--base-font-size) * 1.125);
+  line-height: 1.5;
+}
+
+.responsive-text-xl {
+  font-size: calc(var(--base-font-size) * 1.25);
+  line-height: 1.5;
+}
+
+.responsive-text-2xl {
+  font-size: calc(var(--base-font-size) * 1.5);
+  line-height: 1.4;
+}
+
+.responsive-text-3xl {
+  font-size: calc(var(--base-font-size) * 1.875);
+  line-height: 1.3;
+}
+
+/* Chat message styles */
+.chat-message {
+  @apply max-w-4xl mb-4 p-4 rounded-2xl;
+  font-size: var(--elderly-font-size);
+}
+
+/* Input and form field responsive sizing */
+.elderly-input {
+  font-size: var(--elderly-font-size) !important;
+  min-height: var(--elderly-button-height);
+  @apply px-4 py-3 rounded-xl border border-border;
+}
+
+/* Card content responsive spacing */
+.elderly-card-content {
+  @apply p-6;
+}
+
+@media (max-width: 768px) {
+  .elderly-card-content {
+    @apply p-4;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-message {
+    max-width: 90%;
+    padding: 0.875rem 1.25rem;
+  }
+}
+
+.chat-user {
+  @apply bg-primary text-primary-foreground ml-auto rounded-tl-2xl rounded-tr-2xl rounded-bl-sm rounded-br-2xl;
+}
+
+.chat-ai {
+  @apply bg-accent text-accent-foreground mr-auto rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-sm;
+}
+
+/* PIN display styles */
+.pin-dot {
+  @apply w-4 h-4 rounded-full border-2 transition-colors;
+}
+
+@media (max-width: 768px) {
+  .pin-dot {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+.pin-dot.filled {
+  @apply border-primary bg-primary;
+}
+
+.pin-dot.empty {
+  @apply border-border bg-transparent;
+}
+
+/* Mobile responsiveness for all interfaces */
+.mobile-padding {
+  @apply px-4 py-4;
+}
+
+@media (max-width: 768px) {
+  .mobile-padding {
+    @apply px-3 py-2;
+  }
+}
+
+.mobile-card {
+  @apply mx-0 rounded-lg;
+}
+
+@media (max-width: 768px) {
+  .mobile-card {
+    @apply mx-2;
+  }
+}
+
+/* Responsive grids */
+.mobile-grid-1 {
+  @apply grid-cols-1;
+}
+
+.mobile-grid-2 {
+  @apply grid-cols-1 sm:grid-cols-2;
+}
+
+.mobile-grid-3 {
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+/* Better mobile navigation */
+.mobile-nav {
+  @apply flex flex-row space-x-4;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    @apply flex-col space-y-2 space-x-0;
+  }
+}
+
+/* Touch-friendly interactive elements */
+@media (max-width: 768px) {
+  button, .button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+
+/* Family pages mobile improvements */
+.family-dashboard-stats {
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-4;
+}
+
+.family-reminder-types {
+  @apply grid-cols-2 lg:grid-cols-4;
+}
+
+.family-messages-grid {
+  @apply grid-cols-2 md:grid-cols-3;
+}
+
+
+
+/* Professional pages mobile improvements */
+.professional-form-grid {
+  @apply grid-cols-1 md:grid-cols-2;
+}
+
+.professional-stats-grid {
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+/* Professional sidebar improvements */
+.professional-layout {
+  @apply flex min-h-screen;
+}
+
+.professional-content {
+  @apply flex-1 transition-all duration-200 ease-linear;
+}
+
+/* Mobile improvements for professional dashboard */
+@media (max-width: 768px) {
+  .professional-content {
+    @apply ml-0;
+  }
+  
+  .sidebar-trigger {
+    @apply block;
+  }
+  
+  .professional-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .professional-card-content {
+    @apply p-4;
+  }
+
+  /* Better mobile navigation and layout */
+  .sidebar-content {
+    @apply w-full;
+  }
+
+  /* Ensure proper spacing on mobile */
+  .mobile-safe {
+    @apply px-4 py-2;
+  }
+
+  /* Professional dashboard mobile fixes */
+  .professional-header {
+    @apply flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4;
+  }
+
+  .professional-actions {
+    @apply flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-3;
+  }
+
+  /* Better button sizing on mobile */
+  .mobile-button {
+    @apply w-full md:w-auto min-h-12 text-base;
+  }
+}
+
+/* Better mobile buttons */
+.mobile-friendly-button {
+  @apply min-h-12 px-4;
+  font-size: var(--base-font-size);
+}
+
+/* Mobile-friendly cards */
+.mobile-card-content {
+  @apply p-4 md:p-6;
+}
+
+/* Dialog and form improvements */
+.dialog-mobile {
+  @apply max-h-[90vh] overflow-y-auto;
+}
+
+/* Navigation improvements */
+.nav-mobile-item {
+  @apply p-3;
+  font-size: var(--base-font-size);
+}
+
+/* Mobile-friendly tabs */
+.mobile-tabs-list {
+  @apply flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 h-auto md:h-10 p-2;
+}
+
+.mobile-tabs-trigger {
+  @apply w-full md:w-auto min-h-12 px-4 py-3 md:px-3 md:py-1.5 justify-center;
+  font-size: var(--base-font-size);
+}
+
+/* Responsive tab content */
+.mobile-tabs-content {
+  @apply mt-4 md:mt-2 px-2 md:px-0;
+}
+
+/* Landing page animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out;
+}
+
+.delay-150 {
+  animation-delay: 150ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Professional dashboard specific mobile tabs */
+.professional-tabs-list {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-0 h-auto md:h-10 p-2 md:p-1;
+}
+
+.professional-tabs-trigger {
+  @apply min-h-12 px-4 py-3 md:px-3 md:py-1.5 justify-center items-center;
+  font-size: var(--base-font-size);
+}
+
+/* Elderly user tabs - larger for accessibility */
+.elderly-tabs-list {
+  @apply flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 h-auto md:h-12 p-3;
+}
+
+.elderly-tabs-trigger {
+  @apply w-full px-6 py-4 md:px-4 md:py-3 font-semibold justify-center items-center;
+  min-height: var(--elderly-button-height);
+  font-size: var(--elderly-font-size);
+}
+
+/* Family user tabs */
+.family-tabs-list {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-1 h-auto md:h-10 p-2 md:p-1;
+}
+
+.family-tabs-trigger {
+  @apply min-h-12 px-4 py-3 md:px-3 md:py-1.5 justify-center items-center;
+  font-size: var(--base-font-size);
+}

@@ -1,0 +1,251 @@
+Diseño de la memoria (práctico y barato)
+
+Historial reciente corto: solo los últimos turnos (limitados por tokens).
+
+Resumen rodante (texto): se actualiza después de cada turno si hay cambios relevantes o cada N mensajes.
+
+Memoria estructurada (“bóveda”):
+
+Ítems atómicos con tipo: PREFERENCE, ROUTINE, CONTACT, HEALTH_NOTE (no clínica), FACT, GOAL, etc.
+
+Campos: content, importance (1–5), confidence (0–1), last_reinforced_at (cuando reaparece), expires_at (opcional).
+
+Deduplicación por hash para no inflar la bóveda.
+
+Selección por score = importance * 0.6 + confidence * 0.3 + recencyBoost * 0.1 y traes top K (p.ej. 12).
+
+Rehidratación en cada turno: inyecta RESUMEN + top memorias como system antes de la conversación.
+
+Ventaja: el modelo “recuerda” lo esencial con muy pocos tokens. El coste adicional es pequeño (1 llamada de resumen ligera y solo si procede).
+
+Esquema PostgreSQL (mínimo viable)
+-- Resumen por usuario
+CREATE TABLE conversation_summaries (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  summary_text TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Memoria estructurada
+CREATE TYPE memory_type AS ENUM ('PREFERENCE','ROUTINE','CONTACT','FACT','GOAL','HEALTH_NOTE');
+
+CREATE TABLE memories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type memory_type NOT NULL,
+  content TEXT NOT NULL,                -- “Le gustan las sopas”, “Nieto: Lucas, 8 años”
+  importance SMALLINT NOT NULL DEFAULT 3 CHECK (importance BETWEEN 1 AND 5),
+  confidence REAL NOT NULL DEFAULT 0.6, -- 0..1
+  last_reinforced_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ,
+  source TEXT NOT NULL DEFAULT 'ai',    -- 'ai' | 'caregiver' | 'import'
+  content_hash TEXT NOT NULL,           -- hash para deduplicar (sha256)
+  UNIQUE (user_id, content_hash)
+);
+
+CREATE INDEX ON memories (user_id, last_reinforced_at DESC);
+CREATE INDEX ON memories (user_id, importance DESC);
+
+
+Si ya tienes tablas de actividad, puedes enlazar con source_message_id (opcional).
+
+Flujo en assistant.ts (cómo integrarlo)
+1) Inyecta resumen y memorias antes de llamar al modelo
+// Carga resumen y memorias relevantes
+const summary = await storage.getConversationSummary?.(String(user.id));
+const topMemories = await storage.getTopMemories?.(String(user.id), 12); // [{type, content}, ...]
+
+const memoryBlock = Array.isArray(topMemories) && topMemories.length
+  ? "MEMORIAS RELEVANTES:\n- " + topMemories.map(m => `${m.type}: ${m.content}`).join("\n- ")
+  : "";
+
+const baseMessages: ChatCompletionMessageParam[] = [
+  { role: "system", content: buildSystemPrompt(user) },
+  { role: "system", content: `Marco cognitivo: ${cognitiveScaffold(user.cognitiveLevel)}` },
+  ...(summary ? [{ role: "system", content: `RESUMEN HASTA AHORA:\n${summary}` } as const] : []),
+  ...(memoryBlock ? [{ role: "system", content: memoryBlock } as const] : []),
+  ...clampHistoryToTokens(context.messageHistory, 2800).map(m => ({ role: m.role, content: m.content }) as ChatCompletionMessageParam),
+  { role: "user", content: userMessage }
+];
+
+
+Importante: el resumen y las memorias se inyectan como system para que el modelo las tome como contexto de alta prioridad.
+
+2) Tras obtener la respuesta, actualiza resumen y memoria
+const finalText = finalMsg?.content?.trim() || enhancedOfflineFallback(userMessage, context);
+
+await Promise.allSettled([
+  storage.appendChatTurn?.(String(user.id), { role: "user", content: userMessage }),
+  storage.appendChatTurn?.(String(user.id), { role: "assistant", content: finalText }),
+  maybeUpdateRollingSummary(String(user.id), summary || "", userMessage, finalText),
+  extractAndUpsertMemories(String(user.id), userMessage, finalText), // ⬅️ NUEVO
+  db.logInteraction(String(user.id), "CHAT_MESSAGE", finalText.slice(0,240)),
+]);
+
+Código de utilidades (resumen + memoria)
+
+Usa tu mismo DEFAULT_MODEL y openai. Temperatura baja para consistencia.
+
+function estimateTokens(s: string) { return Math.ceil(s.length / 4); }
+function clampHistoryToTokens(history: ChatTurn[], budget = 2800): ChatTurn[] {
+  const out: ChatTurn[] = []; let used = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const t = history[i]; const cost = estimateTokens(`${t.role}:${t.content}`);
+    if (used + cost > budget) break; out.unshift(t); used += cost;
+  }
+  return out;
+}
+
+// 1) Resumen rodante (solo cuando hace falta)
+async function maybeUpdateRollingSummary(userId: string, prev: string, userText: string, assistantText: string) {
+  try {
+    // Heurística: solo si > 600 caracteres nuevos o cada 6 turnos (ajusta a tu gusto)
+    const deltaLen = (userText.length + assistantText.length);
+    const should = deltaLen > 600 || Math.random() < 0.2;
+    if (!should) return;
+
+    const msgs: ChatCompletionMessageParam[] = [
+      { role: "system", content: "Eres un asistente que mantiene un RESUMEN BREVE en español (4–6 frases). Mantén hechos clave, gustos, planes y relaciones mencionadas. No repitas. Actualiza el resumen previo con los cambios." },
+      { role: "user", content: `Resumen previo:\n${prev || "(vacío)"}\n\nNueva interacción:\nUSUARIO: ${userText}\nASISTENTE: ${assistantText}\n\nDevuelve SOLO el resumen actualizado.` }
+    ];
+    const sum = await openai!.chat.completions.create({
+      model: DEFAULT_MODEL, temperature: 0.2, max_tokens: 220, messages: msgs,
+    });
+    const s = sum.choices?.[0]?.message?.content?.trim();
+    if (s) await storage.saveConversationSummary?.(userId, s);
+  } catch {}
+}
+
+// 2) Extracción de “memorias” estructuradas
+type MemoryItem = {
+  type: "PREFERENCE"|"ROUTINE"|"CONTACT"|"FACT"|"GOAL"|"HEALTH_NOTE";
+  content: string; importance?: number; expires_at?: string|null;
+};
+
+async function extractAndUpsertMemories(userId: string, userText: string, assistantText: string) {
+  try {
+    const sys = `Eres un extractor de MEMORIAS ÚTILES en español. 
+- Devuelve SOLO JSON con un array "memories".
+- Guarda hechos persistentes y útiles para futuras conversaciones (gustos, rutinas, familia, metas, hábitos).
+- NO incluyas datos clínicos ni diagnósticos. 
+- type ∈ {PREFERENCE, ROUTINE, CONTACT, FACT, GOAL, HEALTH_NOTE}.
+- importance 1..5 (por defecto 3). Usa 4–5 si el usuario insiste o lo repite.
+- expires_at ISO si es algo temporal (p. ej. “viaje este fin de semana”).`;
+
+    const msgs: ChatCompletionMessageParam[] = [
+      { role: "system", content: sys },
+      { role: "user", content: `Conversación:\nUSUARIO: ${userText}\nASISTENTE: ${assistantText}\n\nResponde en JSON.` }
+    ];
+
+    const comp = await openai!.chat.completions.create({
+      model: DEFAULT_MODEL, temperature: 0.1, max_tokens: 300, messages: msgs,
+      response_format: { type: "json_object" } as any
+    });
+
+    const raw = comp.choices?.[0]?.message?.content ?? "{}";
+    const parsed = safeParseJSON<{memories?: MemoryItem[]}>(raw, { memories: [] });
+    const items = (parsed.memories || [])
+      .filter(m => m && m.content?.trim())
+      .map(m => ({
+        ...m,
+        importance: Math.min(5, Math.max(1, m.importance ?? 3)),
+      }));
+
+    if (items.length) {
+      await storage.upsertMemories?.(userId, items); // dedup por hash dentro del storage
+    }
+  } catch {}
+}
+
+Métodos storage necesarios (interfaz)
+
+Implementa estos métodos en tu capa storage (PostgreSQL):
+
+// Lee / escribe resumen
+getConversationSummary(userId: string): Promise<string | null>;
+saveConversationSummary(userId: string, summary: string): Promise<void>;
+
+// Upsert de memorias (dedup por hash)
+upsertMemories(userId: string, items: MemoryItem[]): Promise<void>;
+
+// Seleccionar memorias top-k por score
+getTopMemories(userId: string, limit: number): Promise<Array<{type:string, content:string}>>;
+
+// (Opcional) guardar el hilo completo si lo usas para auditoría
+appendChatTurn(userId: string, turn: {role:"user"|"assistant", content:string}): Promise<void>;
+
+Ejemplos SQL/TypeScript para storage
+import crypto from "crypto";
+import { pool } from "./db";
+
+export async function getConversationSummary(userId: string) {
+  const { rows } = await pool.query(
+    `SELECT summary_text FROM conversation_summaries WHERE user_id=$1`, [userId]);
+  return rows[0]?.summary_text || null;
+}
+
+export async function saveConversationSummary(userId: string, summary: string) {
+  await pool.query(
+    `INSERT INTO conversation_summaries (user_id, summary_text, updated_at)
+     VALUES ($1,$2, now())
+     ON CONFLICT (user_id) DO UPDATE SET summary_text=EXCLUDED.summary_text, updated_at=now()`,
+    [userId, summary]
+  );
+}
+
+export async function upsertMemories(userId: string, items: MemoryItem[]) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    for (const m of items) {
+      const hash = crypto.createHash("sha256").update((m.type||"") + "|" + m.content.trim().toLowerCase()).digest("hex");
+      await client.query(
+        `INSERT INTO memories (user_id, type, content, importance, confidence, content_hash, expires_at, last_reinforced_at)
+         VALUES ($1,$2,$3,$4,0.6,$5,$6, now())
+         ON CONFLICT (user_id, content_hash) DO UPDATE
+           SET confidence = LEAST(1.0, memories.confidence + 0.1),
+               last_reinforced_at = now(),
+               importance = GREATEST(memories.importance, EXCLUDED.importance),
+               expires_at = COALESCE(EXCLUDED.expires_at, memories.expires_at)`,
+        [userId, m.type, m.content, m.importance ?? 3, hash, m.expires_at || null]
+      );
+    }
+    await client.query("COMMIT");
+  } finally {
+    client.release();
+  }
+}
+
+export async function getTopMemories(userId: string, limit = 12) {
+  const { rows } = await pool.query(
+    `
+    WITH scored AS (
+      SELECT *,
+        -- booster de recencia (últimos 30 días máx 0.3)
+        LEAST(0.3, GREATEST(0, 0.3 - 0.3 * EXTRACT(EPOCH FROM (now()-last_reinforced_at))/ (30*24*3600))) AS recency_boost
+      FROM memories
+      WHERE user_id = $1
+        AND (expires_at IS NULL OR expires_at > now())
+    )
+    SELECT type, content
+    FROM scored
+    ORDER BY (importance*0.6 + confidence*0.3 + recency_boost*0.1) DESC, last_reinforced_at DESC
+    LIMIT $2
+    `,
+    [userId, limit]
+  );
+  return rows;
+}
+
+Buenas prácticas de privacidad y cumplimiento
+
+Minimización: guarda lo que aporta valor futuro (gustos, rutinas…), no detalles clínicos.
+
+Consentimiento: informa a familiares/profesionales de que se construye una memoria persistente.
+
+Retención: define política (p. ej. borrar mensajes crudos > 6–12 meses, conservar solo resumen y memorias).
+
+Derecho de supresión: implementa “borrar memorias de X” y “reset memoria”.
+
+Cifrado: disco cifrado +, si procede, cifrado por columna (pgcrypto) para campos sensibles.

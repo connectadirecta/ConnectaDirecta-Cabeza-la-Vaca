@@ -1,0 +1,41 @@
+NOMBRE DE LA OPERACIÓN/PROYECTO
+ TRIRURALTECH – Plataforma municipal de asistencia virtual y estimulación cognitiva para personas mayores en entornos rurales
+DESCRIPCIÓN DE LA OPERACIÓN/PROYECTO
+ Desarrollo e implantación de una plataforma en la nube, con asistente virtual basado en IA y una interfaz accesible (web y pantallas táctiles municipales), para coordinar a personas mayores, familiares y personal municipal; registrar información básica, proponer ejercicios cognitivos y reducir la brecha digital mediante formación y puntos de acceso en casas de cultura, bibliotecas y centros sociales. Incluye base de datos cifrada, gestión de roles y despliegue en 6 meses (análisis, desarrollo, piloto y despliegue).
+OBJETIVOS
+Unificar la comunicación y coordinación entre mayores, familias y profesionales municipales/sociosanitarios.
+
+
+Fomentar la autonomía y el envejecimiento activo con recordatorios y ejercicios de estimulación cognitiva.
+
+
+Reducir la brecha digital con una interfaz adaptada y programas de formación locales.
+
+
+Mejorar la eficacia de la atención municipal mediante registros y paneles de seguimiento.
+
+
+Garantizar privacidad y seguridad (RGPD, control de acceso y cifrado TLS/HTTPS).
+
+
+
+RESULTADOS PREVISTOS
+Plataforma operativa multiespacio municipal (web + pantallas táctiles) con roles para mayor, familiar y profesional.
+
+
+Adopción objetivo: alcanzar al menos al 60% de la población mayor en los municipios piloto y mejora de competencias digitales en un 50% de participantes tras los talleres.
+
+
+Calendario de talleres de formación (mayores, familiares y personal municipal) y plan de difusión local y digital.
+
+
+Despliegue en 4 fases en ~6 meses: análisis/diseño, desarrollo, piloto y despliegue final con ajustes.
+
+
+
+PRESUPUESTO
+ 100.000 euros
+AYUDA RECIBIDA
+ 100.000 euros
+FONDO/PROGRAMA
+ AYUDAS DESTINADAS A ECOSISTEMAS EMPRENDEDORES PARA UN TERRITORIO RURAL Y MARINO INTELIGENTE (TRIRURALTECH), MEDIANTE EL DESARROLLO E IMPLEMENTACIÓN DE SOLUCIONES TECNOLÓGICAS INNOVADORAS EN EL ÁMBITO DE LA ECONOMÍA PLATEADA

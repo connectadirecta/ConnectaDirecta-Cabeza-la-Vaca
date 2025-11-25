@@ -1,0 +1,55 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+6:48:40 AM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+6:48:44 AM [express] GET /api/professional/00aa0464-7a4f-4b5d-a852-826662273bec/users 304 in 80ms ::…
+6:48:45 AM [express] GET /api/activities/all 200 in 1ms :: []
+6:48:58 AM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 334ms :: […
+6:48:59 AM [express] GET /api/activities/all 304 in 1ms :: []
+6:49:59 AM [express] GET /api/metrics/ai-quality/aggregated 200 in 324ms :: {"totalAISessions":0,"av…
+6:49:59 AM [express] GET /api/metrics/health/aggregated 200 in 402ms :: {"medicationAdherence":0,"ap…
+6:49:59 AM [express] GET /api/metrics/engagement/aggregated 200 in 606ms :: {"totalSessions":0,"aver…
+6:50:07 AM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 76ms :: [{…
+6:50:07 AM [express] GET /api/activities/all 304 in 0ms :: []
+6:50:18 AM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 303ms :: […
+6:50:19 AM [express] GET /api/activities/all 304 in 1ms :: []
+6:51:13 AM [express] POST /api/auth/login 401 in 307ms :: {"message":"Credenciales inválidas"}
+6:51:40 AM [express] POST /api/auth/login 200 in 384ms :: {"user":{"id":"00aa0464-7a4f-4b5d-a852-826…
+6:51:40 AM [express] GET /api/professional/00aa0464-7a4f-4b5d-a852-826662273bec/users 304 in 77ms ::…
+6:51:40 AM [express] GET /api/activities/all 304 in 1ms :: []
+6:51:49 AM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 77ms :: [{…
+6:51:49 AM [express] GET /api/activities/all 304 in 1ms :: []
+6:54:39 AM [express] GET /api/professional/prof-001-uuid-test-12345678901234/users 304 in 799ms :: […
+6:54:39 AM [express] GET /api/activities/all 304 in 1ms :: []
+7:01:47 AM [vite] hmr update /src/components/navigation.tsx, /src/index.css?v=iW84OvZFCG_pc-P93QbLS
+7:01:47 AM [vite] hmr update /src/App.tsx?v=iW84OvZFCG_pc-P93QbLS, /src/index.css?v=iW84OvZFCG_pc-P93QbLS
+7:01:47 AM [vite] hmr update /src/pages/professional-dashboard.tsx, /src/index.css?v=iW84OvZFCG_pc-P93QbLS
+7:01:48 AM [vite] Pre-transform error: /home/runner/workspace/client/src/pages/professional-dashboard.tsx: Unterminated JSX contents. (443:10)
+
+  441 |         </Tabs>
+  442 |       </div>
+> 443 |     </div>
+      |           ^
+  444 |   );
+  445 | }
+  446 |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

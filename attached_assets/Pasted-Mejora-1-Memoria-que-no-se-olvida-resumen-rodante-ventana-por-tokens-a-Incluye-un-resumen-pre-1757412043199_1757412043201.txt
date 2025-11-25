@@ -1,0 +1,93 @@
+Mejora 1 — Memoria que no se olvida (resumen rodante + ventana por tokens)
+a) Incluye un resumen previo (si existe)
+
+Añade esto al construir baseMessages:
+
+// Carga resumen persistido (opcional; si no está implementado, se ignora)
+const summary = await storage.getConversationSummary?.(String(user.id)).catch(()=>undefined);
+const summaryMsg: ChatCompletionMessageParam[] = summary
+  ? [{ role: "system", content: `Resumen de la conversación hasta ahora (para contexto):\n${summary}` }]
+  : [];
+
+// Empaqueta historial por tokens en lugar de slice(-10)
+const workingHistory = clampHistoryToTokens(context.messageHistory, 2800); // ~ presupuesto para 4o
+
+const baseMessages: ChatCompletionMessageParam[] = [
+  { role: "system", content: buildSystemPrompt(user) },
+  { role: "system", content: `Marco cognitivo: ${cognitiveScaffold(user.cognitiveLevel)}` },
+  ...summaryMsg,
+  ...workingHistory.map(m => ({ role: m.role, content: m.content }) as ChatCompletionMessageParam),
+  { role: "user", content: userMessage },
+];
+
+
+Con estas utilidades simples (sin dependencias):
+
+function estimateTokens(s: string) { return Math.ceil(s.length / 4); }
+
+function clampHistoryToTokens(history: ChatTurn[], budget = 2800): ChatTurn[] {
+  const out: ChatTurn[] = [];
+  let used = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const t = history[i];
+    const cost = estimateTokens(`${t.role}:${t.content}`);
+    if (used + cost > budget) break;
+    out.unshift(t);
+    used += cost;
+  }
+  return out;
+}
+
+
+(Si quieres más precisión, puedes usar @dqbd/tiktoken y ajustar el presupuesto total según modelo.)
+
+b) Actualiza el resumen tras cada turno
+
+Al final de generateAIResponse(), después de obtener finalText, añade:
+
+await Promise.allSettled([
+  storage.appendChatTurn?.(String(user.id), { role: "user", content: userMessage }),
+  storage.appendChatTurn?.(String(user.id), { role: "assistant", content: finalText }),
+  updateRollingSummary(String(user.id), summary || "", userMessage, finalText),
+  db.logInteraction(String(user.id), "CHAT_MESSAGE", finalText.slice(0, 240)),
+]);
+
+
+Implementación ligera del actualizador (usa el mismo modelo, temperatura baja):
+
+async function updateRollingSummary(userId: string, prev: string, userText: string, assistantText: string) {
+  try {
+    const msgs: ChatCompletionMessageParam[] = [
+      { role: "system", content: "Eres un asistente que resume conversaciones en español, breve y fiel. Mantén nombres y hechos. Máx. 4-6 frases." },
+      { role: "user", content: `Resumen previo:\n${prev || "(vacío)"}\n\nNueva interacción:\nUSUARIO: ${userText}\nASISTENTE: ${assistantText}\n\nDevuelve el resumen actualizado.` },
+    ];
+    const sum = await openai!.chat.completions.create({
+      model: DEFAULT_MODEL, temperature: 0.2, max_tokens: 220, messages: msgs,
+    });
+    const s = sum.choices?.[0]?.message?.content?.trim();
+    if (s) await storage.saveConversationSummary?.(userId, s);
+  } catch {}
+}
+
+
+Con esto, aunque tengas que truncar el historial, el modelo siempre ve el contexto esencial en el system.
+
+🛡️ Mejora 2 — Robustez y trazabilidad
+
+Reintentos con backoff en las llamadas a OpenAI:
+
+async function withRetry<T>(fn: () => Promise<T>, tries = 2): Promise<T> {
+  let lastErr: any;
+  for (let i = 0; i < tries; i++) {
+    try { return await fn(); }
+    catch (e) { lastErr = e; await new Promise(r => setTimeout(r, 300 * (i + 1))); }
+  }
+  throw lastErr;
+}
+
+
+Úsalo en las dos llamadas a chat.completions.create.
+
+Defensas nulas: comprueba completion.choices?.[0]?.message antes de acceder. Si no hay, retorna un fallback amable.
+
+Logging útil (en desarrollo): registra tool_calls que llegan y los resultados de tus funciones (con requestId) para depurar.

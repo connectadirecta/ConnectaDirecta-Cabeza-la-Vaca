@@ -1,0 +1,39 @@
+He revisado tu db.ts y tu schema.ts. Está muy cerca de lo que necesitas, pero hay varios puntos que te están penalizando la memoria, la consistencia y la fiabilidad con el paso de los meses. Te dejo (1) diagnóstico, (2) mejoras prioritarias con código Drizzle listo para pegar, (3) extras opcionales, y (4) migraciones orientativas.
+
+1) Diagnóstico (qué toca mejorar ya)
+
+Críticos (P0)
+
+Tipos de tiempo sin zona horaria: usas timestamp (sin TZ). Para recordatorios, actividad y sesiones, usa timestamptz y guarda en UTC + campo timezone por usuario o por recordatorio.
+
+Recordatorios modelados como text (hora/fecha): reminderTime y reminderDate como texto es frágil (validación y ordenado). Cambia a time / date o unifica en timestamptz con un esquema de recurrencia.
+
+IDs como varchar con gen_random_uuid(): funciona, pero mejor uuid nativo (más compacto y rápido, y te ahorras conversiones).
+
+PIN y contraseña: tienes password y pin en claro en el esquema (al menos por nombre). Renómbralos a passwordHash y pinHash explícitamente y bloquea el almacenamiento de valores sin hash a nivel de código.
+
+Memorias sin UNIQUE: en memories falta el UNIQUE (user_id, content_hash). Si no, se te duplicarán.
+
+chat_sessions.messages como text: guárdalo como jsonb, lo vas a consultar/recortar/resumir.
+
+Roles/Tipos como text: pasa a pgEnum (role, reminder_type, message_type, activity_type, cognitive_level). Evitarás valores inesperados.
+
+Faltan asignaciones/consentimientos: ahora mismo “Familiar” y “Profesional” no tienen relación explícita con el mayor → difícil aplicar RBAC limpio. Añade tablas family_assignments, professional_assignments y consents.
+
+Importantes (P1)
+
+Índices para tus queries más comunes (ver abajo).
+
+Separar contacto de emergencia en name y phone, o como JSON tipado (jsonb).
+
+Añadir timezone y locale en users (p. ej. Europe/Madrid, es-ES).
+
+Evitar doble fuente de verdad en recordatorios: si tienes reminder_completions, elimina isCompleted en reminders o deja claro que solo aplica a “one‑off”.
+
+Opcionales útiles (P2)
+
+Tabla attachments (mensajes/fotos, verificación de medicación) y referenciar desde messages y reminder_completions.
+
+activities.activity_type como pgEnum y normalizar eventos comunes.
+
+Almacenar tokens de refresco / sesiones si gestionas revocación.

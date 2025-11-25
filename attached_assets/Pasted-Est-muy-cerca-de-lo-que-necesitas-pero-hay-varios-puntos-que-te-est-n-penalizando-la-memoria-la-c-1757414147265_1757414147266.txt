@@ -1,0 +1,343 @@
+Está muy cerca de lo que necesitas, pero hay varios puntos que te están penalizando la memoria, la consistencia y la fiabilidad con el paso de los meses. Te dejo (1) diagnóstico, (2) mejoras prioritarias con código Drizzle listo para pegar, (3) extras opcionales, y (4) migraciones orientativas.
+
+1) Diagnóstico (qué toca mejorar ya)
+
+Críticos (P0)
+
+Tipos de tiempo sin zona horaria: usas timestamp (sin TZ). Para recordatorios, actividad y sesiones, usa timestamptz y guarda en UTC + campo timezone por usuario o por recordatorio.
+
+Recordatorios modelados como text (hora/fecha): reminderTime y reminderDate como texto es frágil (validación y ordenado). Cambia a time / date o unifica en timestamptz con un esquema de recurrencia.
+
+IDs como varchar con gen_random_uuid(): funciona, pero mejor uuid nativo (más compacto y rápido, y te ahorras conversiones).
+
+PIN y contraseña: tienes password y pin en claro en el esquema (al menos por nombre). Renómbralos a passwordHash y pinHash explícitamente y bloquea el almacenamiento de valores sin hash a nivel de código.
+
+Memorias sin UNIQUE: en memories falta el UNIQUE (user_id, content_hash). Si no, se te duplicarán.
+
+chat_sessions.messages como text: guárdalo como jsonb, lo vas a consultar/recortar/resumir.
+
+Roles/Tipos como text: pasa a pgEnum (role, reminder_type, message_type, activity_type, cognitive_level). Evitarás valores inesperados.
+
+Faltan asignaciones/consentimientos: ahora mismo “Familiar” y “Profesional” no tienen relación explícita con el mayor → difícil aplicar RBAC limpio. Añade tablas family_assignments, professional_assignments y consents.
+
+Importantes (P1)
+
+Índices para tus queries más comunes (ver abajo).
+
+Separar contacto de emergencia en name y phone, o como JSON tipado (jsonb).
+
+Añadir timezone y locale en users (p. ej. Europe/Madrid, es-ES).
+
+Evitar doble fuente de verdad en recordatorios: si tienes reminder_completions, elimina isCompleted en reminders o deja claro que solo aplica a “one‑off”.
+
+Opcionales útiles (P2)
+
+Tabla attachments (mensajes/fotos, verificación de medicación) y referenciar desde messages y reminder_completions.
+
+activities.activity_type como pgEnum y normalizar eventos comunes.
+
+Almacenar tokens de refresco / sesiones si gestionas revocación.
+
+2) Esquema mejorado (Drizzle) — fragmentos listos
+
+No tienes que reescribir todo de golpe. Puedes migrar por partes. Aquí va una versión “sana” de las tablas clave. Ajusta nombres a tu gusto.
+
+// schema.ts (fragmentos importantes)
+import { sql } from "drizzle-orm";
+import {
+  pgTable, uuid, text, timestamp, boolean, integer, pgEnum, smallint, real,
+  time, date, jsonb, index, uniqueIndex
+} from "drizzle-orm/pg-core";
+
+/** Enums */
+export const roleEnum = pgEnum("role", ["ELDERLY","FAMILY","PROFESSIONAL","ADMIN"]);
+export const reminderTypeEnum = pgEnum("reminder_type", ["MEDICINE","APPOINTMENT","CALL","ACTIVITY"]);
+export const scheduleTypeEnum = pgEnum("schedule_type", ["ONE_OFF","DAILY","WEEKLY"]);
+export const messageTypeEnum = pgEnum("message_type", ["text","photo"]);
+export const activityTypeEnum = pgEnum("activity_type", [
+  "login","chat","reminder_created","reminder_completed","message_sent","message_read","ai_interaction","health_alert"
+]);
+export const cognitiveLevelEnum = pgEnum("cognitive_level", ["normal","mild","moderate"]);
+export const memoryTypeEnum = pgEnum("memory_type", ["PREFERENCE","ROUTINE","CONTACT","FACT","GOAL","HEALTH_NOTE"]);
+export const emotionalStateEnum = pgEnum("emotional_state", ["neutral","positive","sad","anxious","tired","angry"]);
+
+/** Usuarios */
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),           // considera CITEXT si habilitas la extensión
+  email: text("email"),                                     // opcional + unique si lo usas
+  passwordHash: text("password_hash").notNull(),
+  role: roleEnum("role").notNull().default("ELDERLY"),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  pinHash: text("pin_hash"),                                 // NO guardes PIN en claro
+  deviceId: text("device_id"),                               // para login por PIN vinculado
+  age: integer("age"),
+  medicalConditions: text("medical_conditions").array(),
+  medications: text("medications").array(),
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  preferences: jsonb("preferences"),                         // JSONB mejor que string
+  personalityTraits: jsonb("personality_traits"),
+  cognitiveLevel: cognitiveLevelEnum("cognitive_level").notNull().default("normal"),
+  timezone: text("timezone").notNull().default("Europe/Madrid"),
+  locale: text("locale").notNull().default("es-ES"),
+  isActive: boolean("is_active").notNull().default(true),
+  lastActivity: timestamp("last_activity", { withTimezone: true }).default(sql`now()`),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+},
+(t) => ({
+  userRoleIdx: index("users_role_idx").on(t.role),
+  userActiveIdx: index("users_active_idx").on(t.isActive)
+}));
+
+/** Asignaciones y consentimientos (RBAC real) */
+export const familyAssignments = pgTable("family_assignments", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  familyUserId: uuid("family_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+}, (t) => ({
+  uniq: uniqueIndex("family_unique").on(t.familyUserId, t.elderlyUserId),
+  byFamily: index("family_by_family").on(t.familyUserId),
+  byElderly: index("family_by_elderly").on(t.elderlyUserId),
+}));
+
+export const professionalAssignments = pgTable("professional_assignments", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  professionalUserId: uuid("professional_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+}, (t) => ({
+  uniq: uniqueIndex("pro_unique").on(t.professionalUserId, t.elderlyUserId),
+  byPro: index("pro_by_pro").on(t.professionalUserId),
+  byElderly: index("pro_by_elderly").on(t.elderlyUserId),
+}));
+
+export const consents = pgTable("consents", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  elderlyUserId: uuid("elderly_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  granteeRole: text("grantee_role").notNull(), // "PROFESSIONAL"
+  scope: jsonb("scope").notNull(),            // p.ej. {"fields":["reminders","activity_summary"]}
+  grantedAt: timestamp("granted_at", { withTimezone: true }).notNull().default(sql`now()`),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+}, (t) => ({
+  byElderly: index("consents_by_elderly").on(t.elderlyUserId),
+}));
+
+/** Recordatorios con programación sana (recurrencia simple) */
+export const reminders = pgTable("reminders", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: reminderTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduleType: scheduleTypeEnum("schedule_type").notNull().default("ONE_OFF"),
+
+  // ONE_OFF:
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+
+  // DAILY/WEEKLY:
+  timeOfDay: time("time_of_day"),               // 09:30 (hora local del usuario)
+  byWeekday: smallint("by_weekday").array(),    // 1..7 (1=lunes). Solo para WEEKLY
+  timezone: text("timezone").notNull().default("Europe/Madrid"),
+
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE|CANCELLED
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+}, (t) => ({
+  byUserType: index("reminders_by_user_type").on(t.userId, t.type),
+  byUserStatus: index("reminders_by_user_status").on(t.userId, t.status),
+  nextIdx: index("reminders_sched_idx").on(t.userId, t.scheduledAt, t.timeOfDay),
+}));
+
+/** Completados (fuente de verdad) */
+export const reminderCompletions = pgTable("reminder_completions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  reminderId: uuid("reminder_id").notNull().references(() => reminders.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  completedAt: timestamp("completed_at", { withTimezone: true }).notNull().default(sql`now()`),
+  completedBy: uuid("completed_by").references(() => users.id, { onDelete: "set null" }),
+  notes: text("notes"),
+  verificationPhotoUrl: text("verification_photo_url"),
+  wasLate: boolean("was_late").notNull().default(false),
+  minutesLate: integer("minutes_late"),
+}, (t) => ({
+  byReminder: index("rc_by_reminder").on(t.reminderId),
+  byUser: index("rc_by_user").on(t.userId),
+  byCompletedAt: index("rc_by_time").on(t.completedAt),
+}));
+
+/** Mensajes */
+export const messages = pgTable("messages", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  fromUserId: uuid("from_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  toUserId: uuid("to_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  messageType: messageTypeEnum("message_type").notNull().default("text"),
+  attachmentUrl: text("attachment_url"),
+  metadata: jsonb("metadata"), // p.ej. dimensiones de la foto
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+}, (t) => ({
+  inboxIdx: index("messages_inbox_idx").on(t.toUserId, t.isRead, t.createdAt),
+  outboxIdx: index("messages_outbox_idx").on(t.fromUserId, t.createdAt),
+}));
+
+/** Actividad */
+export const activities = pgTable("activities", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  activityType: activityTypeEnum("activity_type").notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+}, (t) => ({
+  byUser: index("activities_by_user").on(t.userId, t.createdAt),
+  byType: index("activities_by_type").on(t.activityType),
+}));
+
+/** Sesiones de chat (resumen + datos estructurados) */
+export const chatSessions = pgTable("chat_sessions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  messages: jsonb("messages").notNull(),                 // JSONB, no text
+  duration: integer("duration"),
+  emotionalState: emotionalStateEnum("emotional_state"),
+  cognitiveExercises: jsonb("cognitive_exercises"),
+  topicsDiscussed: text("topics_discussed").array(),
+  alertsGenerated: jsonb("alerts_generated"),
+  sessionSummary: text("session_summary"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+}, (t) => ({
+  byUser: index("chats_by_user").on(t.userId, t.createdAt),
+}));
+
+/** Resumen de conversación */
+export const conversationSummaries = pgTable("conversation_summaries", {
+  userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  summaryText: text("summary_text").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(sql`now()`),
+});
+
+/** Memorias con UNIQUE y buenos índices */
+export const memories = pgTable("memories", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: memoryTypeEnum("type").notNull(),
+  content: text("content").notNull(),
+  importance: smallint("importance").notNull().default(3),
+  confidence: real("confidence").notNull().default(0.6),
+  lastReinforcedAt: timestamp("last_reinforced_at", { withTimezone: true }).notNull().default(sql`now()`),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  source: text("source").notNull().default("ai"),
+  contentHash: text("content_hash").notNull(),
+}, (t) => ({
+  uniq: uniqueIndex("memories_user_hash_unique").on(t.userId, t.contentHash),
+  byUserRecent: index("memories_user_recent_idx").on(t.userId, t.lastReinforcedAt),
+  byUserImportance: index("memories_user_importance_idx").on(t.userId, t.importance),
+}));
+
+
+Si no quieres migrar ahora a jsonb en users.preferences/personalityTraits, puedes dejar text, pero te recomiendo migrar (menos errores y parseos).
+
+3) Índices y validaciones rápidas
+
+Consultas típicas:
+
+“Recordatorios de hoy”: reminders_by_user_status, reminders_sched_idx ayudan a filtrar por userId, status y ordenar por scheduledAt o timeOfDay.
+
+“Bandeja de entrada no leída”: messages_inbox_idx (to_user_id, is_read, created_at DESC).
+
+“Actividad reciente”: activities_by_user.
+
+“Top memorias”: ya tienes por lastReinforcedAt e importance.
+
+Checks (si mantienes texto): si todavía no migras reminderTime/reminderDate, añade CHECK con regex. (Yo haría la migración a time/date/timestamptz y me olvido).
+
+4) Migraciones orientativas (SQL a mano)
+
+Ojo: ejecuta en staging primero y respáldate. Si tus datos actuales están en timestamp sin TZ, decide qué TZ representan (probablemente local). Aquí asumo que son UTC.
+
+a) timestamps → timestamptz
+
+ALTER TABLE users ALTER COLUMN last_activity TYPE timestamptz USING last_activity AT TIME ZONE 'UTC';
+ALTER TABLE users ALTER COLUMN created_at TYPE timestamptz USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE reminders ALTER COLUMN created_at TYPE timestamptz USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE messages ALTER COLUMN created_at TYPE timestamptz USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE activities ALTER COLUMN created_at TYPE timestamptz USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE chat_sessions ALTER COLUMN created_at TYPE timestamptz USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE reminder_completions ALTER COLUMN completed_at TYPE timestamptz USING completed_at AT TIME ZONE 'UTC';
+ALTER TABLE conversation_summaries ALTER COLUMN updated_at TYPE timestamptz USING updated_at AT TIME ZONE 'UTC';
+ALTER TABLE memories ALTER COLUMN last_reinforced_at TYPE timestamptz USING last_reinforced_at AT TIME ZONE 'UTC';
+ALTER TABLE memories ALTER COLUMN created_at TYPE timestamptz USING created_at AT TIME ZONE 'UTC';
+
+
+b) UNIQUE en memorias
+
+CREATE UNIQUE INDEX IF NOT EXISTS memories_user_hash_unique
+ON memories (user_id, content_hash);
+
+
+c) Recordatorios (si migras de text a time/date/timestamptz)
+Estrategia: crea columnas nuevas, migra, y luego elimina las antiguas.
+
+ALTER TABLE reminders ADD COLUMN scheduled_at timestamptz;
+ALTER TABLE reminders ADD COLUMN time_of_day time;
+ALTER TABLE reminders ADD COLUMN by_weekday smallint[];
+ALTER TABLE reminders ADD COLUMN schedule_type schedule_type NOT NULL DEFAULT 'ONE_OFF';
+ALTER TABLE reminders ADD COLUMN timezone text NOT NULL DEFAULT 'Europe/Madrid';
+
+-- MIGRA: si tenías reminder_date + reminder_time, convierlos a scheduled_at (elige TZ del usuario)
+-- Ejemplo genérico (ajústalo en función de tus datos):
+-- UPDATE reminders SET scheduled_at = (reminder_date || ' ' || reminder_time) AT TIME ZONE 'Europe/Madrid';
+
+-- Cuando acabes:
+ALTER TABLE reminders DROP COLUMN reminder_time;
+ALTER TABLE reminders DROP COLUMN reminder_date;
+
+
+d) JSONB en sesiones y preferencias
+
+ALTER TABLE chat_sessions ALTER COLUMN messages TYPE jsonb USING messages::jsonb;
+ALTER TABLE chat_sessions ALTER COLUMN cognitive_exercises TYPE jsonb USING cognitive_exercises::jsonb;
+ALTER TABLE chat_sessions ALTER COLUMN alerts_generated TYPE jsonb USING alerts_generated::jsonb;
+
+ALTER TABLE users ALTER COLUMN preferences TYPE jsonb USING preferences::jsonb;
+ALTER TABLE users ALTER COLUMN personality_traits TYPE jsonb USING personality_traits::jsonb;
+
+
+e) Seguridad de credenciales
+
+ALTER TABLE users RENAME COLUMN password TO password_hash;
+ALTER TABLE users RENAME COLUMN pin TO pin_hash;
+
+5) Ajustes en tu db.ts
+
+Tu db.ts está bien para Neon serverless. Dos recomendaciones prácticas:
+
+Si tienes muchos lambdas/rutas, reusa el mismo pool y NO hagas pool.end() en cada invocación.
+
+Si vas a usar CITEXT (para username/email insensible a mayúsculas), asegúrate de habilitar la extensión citext y cambia el tipo en Drizzle (o crea LOWER(username) unique index).
+
+6) Consejos operativos
+
+Timezone por usuario: cuando calcules “recordatorios de hoy”, convierte scheduledAt a la TZ del usuario. Para DAILY/WEEKLY usa timeOfDay + byWeekday + timezone.
+
+Una sola fuente de verdad: deja los completados en reminder_completions y deduce “hecho/no hecho” del día con una LEFT JOIN a esa tabla.
+
+Retención: guarda chats crudos 3–6 meses; conserva solo resumen + memorias a largo plazo.
+
+Privacidad: separa emergencyContactName/Phone, y si subes informes/fotos sensibles, pásalos a attachments con control de acceso.
+
+7) Qué ganas con estos cambios
+
+Memoria estable a meses vista: el resumen y las memorias se reinyectan siempre, sin inflar tokens.
+
+Recordatorios sólidos: cero bugs por formato de fecha/hora, y soporte nativo a recurrencia simple.
+
+RBAC real: familiares y profesionales solo ven lo que deben por asignación/consentimiento.
+
+Menos errores: enums, jsonb y TZ te quitan ambigüedades típicas.
+
+Rendimiento: índices pensados para tus pantallas (hoy, bandeja, actividad, memorias).

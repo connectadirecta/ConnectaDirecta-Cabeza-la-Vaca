@@ -1,0 +1,85 @@
+“Leer en voz alta” por defecto en navegador (gratis) y
+
+Fallback TTS en servidor (Polly o Azure) para voz consistente.
+
+“Dictar”: primero intentarlo con SpeechRecognition en Chrome; si no hay soporte/consentimiento, subir audio y transcribir con Whisper API.
+
+Esto te da coste casi cero en muchos casos y una experiencia robusta.
+
+Código listo para tu Next.js + React
+1) Hook TTS (cliente, gratis)
+
+Usa la Web Speech API. Si no hay soporte, usa tu endpoint de TTS.
+
+// hooks/useTTS.ts
+import { useEffect, useRef, useState } from "react";
+
+export function useTTS(lang = "es-ES") {
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const [available, setAvailable] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    synthRef.current = window.speechSynthesis;
+
+    const loadVoices = () => {
+      const list = window.speechSynthesis.getVoices()
+        .filter(v => v.lang?.toLowerCase().startsWith("es"));
+      setVoices(list);
+      setAvailable(true);
+    };
+
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  const speak = (text: string, voiceName?: string) => {
+    if (!synthRef.current) return false;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang;
+    if (voiceName) {
+      const v = voices.find(v => v.name === voiceName);
+      if (v) utter.voice = v;
+    } else if (voices[0]) {
+      utter.voice = voices[0];
+    }
+    utter.onend = () => setSpeaking(false);
+    utter.onerror = () => setSpeaking(false);
+
+    // Evita superposiciones
+    synthRef.current.cancel();
+    setSpeaking(true);
+    synthRef.current.speak(utter);
+    return true;
+  };
+
+  const stop = () => {
+    synthRef.current?.cancel();
+    setSpeaking(false);
+  };
+
+  return { available, speaking, speak, stop, voices };
+}
+
+
+MDN (SpeechSynthesis / Web Speech API): 
+developer.mozilla.org
++1
+
+Uso en tu chat de Persona Mayor (pantalla 3):
+
+const { available, speak, stop, speaking } = useTTS("es-ES");
+
+// Botón "Leer en voz alta" en cada mensaje del asistente:
+<button
+  onClick={() => {
+    const ok = speak(ultimoMensajeAsistente);
+    if (!ok) fetch("/api/tts", { method: "POST", body: JSON.stringify({ text: ultimoMensajeAsistente }) });
+  }}
+>
+  {speaking ? "Parar lectura" : "Leer en voz alta"}
+</button>

@@ -1,0 +1,39 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+8:44:51 AM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+8:45:33 AM [express] POST /api/auth/login 200 in 488ms :: {"user":{"id":"643865d4-f686-4e5f-90b0-5ca…
+8:45:36 AM [express] GET /api/activities/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 1ms :: []
+8:45:36 AM [express] GET /api/users/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 75ms :: {"id":"58112…
+8:45:37 AM [express] GET /api/reminders/58112cfd-1adb-404d-af5c-9f8b9b56fa60 200 in 320ms :: []
+8:45:39 AM [express] GET /api/reminders/58112cfd-1adb-404d-af5c-9f8b9b56fa60/completions 200 in 2309…
+8:45:39 AM [express] GET /api/reminders/58112cfd-1adb-404d-af5c-9f8b9b56fa60/today 200 in 2393ms :: …
+8:45:39 AM [express] GET /api/reminders/58112cfd-1adb-404d-af5c-9f8b9b56fa60/stats 200 in 2402ms :: …
+8:47:41 AM [vite] hmr update /src/index.css?v=s35tM1QrZ4kXMgqZ7XCwG
+8:47:41 AM [vite] hmr update /src/components/ui/tabs.tsx, /src/index.css?v=s35tM1QrZ4kXMgqZ7XCwG
+8:47:41 AM [vite] hmr update /src/pages/professional-dashboard.tsx, /src/index.css?v=s35tM1QrZ4kXMgqZ7XCwG
+8:47:43 AM [vite] Internal server error: [postcss] /home/runner/workspace/client/src/index.css:493:3: The `md:min-h-auto` class does not exist. If `md:min-h-auto` is a custom class, make sure it is defined within a `@layer` directive.
+  Plugin: vite:css
+  File: /home/runner/workspace/client/src/index.css:493:2
+  491|  
+  492|  .mobile-tabs-trigger {
+  493|    @apply w-full md:w-auto min-h-12 md:min-h-auto px-4 py-3 md:px-3 md:py-1.5 text-base md:text-sm justify-center;
+     |    ^
+  494|  }
+  495|  
+      at Input.error (/home/runner/workspace/node_modules/postcss/lib/input.js:106:16)
+      at AtRule.error (/home/runner/workspace/node_modules/postcss/lib/node.js:115:32)
+      at processApply (/home/runner/workspace/node_modules/tailwindcss/lib/lib/expandApplyAtRules.js:380:29)
+      at /home/runner/workspace/node_modules/tailwindcss/lib/lib/expandApplyAtRules.js:551:9
+      at /home/runner/workspace/node_modules/tailwindcss/lib/processTailwindFeatures.js:55:50
+      at async plugins (/home/runner/workspace/node_modules/tailwindcss/lib/plugin.js:38:17)
+      at async LazyResult.runAsync (/home/runner/workspace/node_modules/postcss/lib/lazy-result.js:261:11)
+      at async compileCSS (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:36898:21)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:36171:11)
+      at async PluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:49099:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:51977:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:62105:24)

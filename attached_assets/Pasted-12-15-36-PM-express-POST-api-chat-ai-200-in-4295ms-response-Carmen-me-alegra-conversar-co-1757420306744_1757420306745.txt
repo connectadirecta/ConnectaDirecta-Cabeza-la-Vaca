@@ -1,0 +1,47 @@
+12:15:36 PM [express] POST /api/chat/ai 200 in 4295ms :: {"response":"Carmen, me alegra conversar con…
+AI error: BadRequestError: 400 Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.
+    at Function.generate (/home/runner/workspace/node_modules/openai/src/core/error.ts:72:14)
+    at OpenAI.makeStatusError (/home/runner/workspace/node_modules/openai/src/client.ts:463:28)
+    at OpenAI.makeRequest (/home/runner/workspace/node_modules/openai/src/client.ts:713:24)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async withRetry (/home/runner/workspace/server/openai.ts:35:14)
+    at async generateAIResponse (/home/runner/workspace/server/openai.ts:571:20)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:418:26) {
+  status: 400,
+  headers: Headers {
+    date: 'Tue, 09 Sep 2025 12:15:54 GMT',
+    'content-type': 'application/json',
+    'content-length': '233',
+    connection: 'keep-alive',
+    'access-control-expose-headers': 'X-Request-ID',
+    'openai-organization': 'user-uzyllosdt4pw34kqrfjjvohj',
+    'openai-processing-ms': '39',
+    'openai-project': 'proj_fBig5ffISYpa1nUArdq5wMce',
+    'openai-version': '2020-10-01',
+    'x-envoy-upstream-service-time': '42',
+    'x-ratelimit-limit-requests': '5000',
+    'x-ratelimit-limit-tokens': '450000',
+    'x-ratelimit-remaining-requests': '4999',
+    'x-ratelimit-remaining-tokens': '449534',
+    'x-ratelimit-reset-requests': '12ms',
+    'x-ratelimit-reset-tokens': '62ms',
+    'x-request-id': 'req_fbc66e8a705245639e99c28c5de8c5d0',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=6r5MdKcpmrLQtZQTjwB593jeNh3HrdirOTyXVJ6Ddko-1757420154-1.0.1.1-0tcfr.rjqQL1J8.ZYZtHrRxCyiM3og2tYgnnDZMNgPQWz0vwkNZLdMkqkSEwl84D957sZzJcvGmZahV0WWb3u38pRQDVxvp4QGjMxdFvRqc; path=/; expires=Tue, 09-Sep-25 12:45:54 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=uc3AF_QmG1X2qNfv1aHRcNaBuU5hZv6NNpC7VFvZ3DA-1757420154281-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-content-type-options': 'nosniff',
+    server: 'cloudflare',
+    'cf-ray': '97c69d19aea8ed7f-ATL',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  requestID: 'req_fbc66e8a705245639e99c28c5de8c5d0',
+  error: {
+    message: "Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.",
+    type: 'invalid_request_error',
+    param: 'messages.[6].role',
+    code: null
+  },
+  code: null,
+  param: 'messages.[6].role',
+  type: 'invalid_request_error'
+}
